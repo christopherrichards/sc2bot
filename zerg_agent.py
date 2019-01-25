@@ -1,12 +1,21 @@
 from pysc2.agents import base_agent
 from pysc2.env import sc2_env
-from pysc2.lib import actions, features
+from pysc2.lib import actions, features, units
+import random
 from absl import app
 
 
 class ZergAgent(base_agent.BaseAgent):
     def step(self, obs):
         super(ZergAgent, self).step(obs)
+
+        drones = [unit for unit in obs.observation.feature_units
+                  if unit.unit_type == units.Zerg.Drone]
+        if len(drones) > 0:
+            drone = random.choice(drones)
+
+            return actions.FUNCTIONS.select_point("select_all_type", (drone.x,
+                                                                      drone.y))
 
         return actions.FUNCTIONS.no_op()
 
@@ -21,7 +30,8 @@ def main(unused_argv):
                              sc2_env.Bot(sc2_env.Race.protoss,
                              sc2_env.Difficulty.very_easy)],
                     agent_interface_format=features.AgentInterfaceFormat(
-                        feature_dimensions=features.Dimensions(screen=84, minimap=64)),
+                        feature_dimensions=features.Dimensions(screen=84, minimap=64),
+                        use_feature_units=True),
                     step_mul=16,
                     game_steps_per_episode=0,
                     visualize=True) as env:
